@@ -1,0 +1,80 @@
+<html>
+<head>
+  <title>HW 8 points</title>
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="./data/neighborhoods.js"></script>
+  <script src="./data/points.js"></script>
+</head>
+<body>
+  <script>
+    let width = 800;
+    let height = 600;
+
+    let svg = d3.select("body")
+      .append( "svg" )
+      .attr("width", width)
+      .attr("height", height);
+
+    let neighborhoods = svg.append( "g" );
+
+    let albersProjection = d3.geoAlbers()
+      .scale(195000)
+      .rotate([71.057,0])
+      .center([0, 42.313])
+      .translate( [width/2,height/2] );
+
+    let geoPath = d3.geoPath()
+        .projection(albersProjection);
+
+    neighborhoods.selectAll("path")
+      .data(neighborhoods_json.features)
+      .enter()
+      .append("path")
+      .attr("d", geoPath)
+      .attr("fill", "#ccc");
+    let points = svg.append( "g" );
+
+    function findMinMax(x, y) {
+
+      // get min/max x values
+      let xMin = d3.min(x);
+      let xMax = d3.max(x);
+      let yMin = d3.min(y);
+      let yMax = d3.max(y);
+
+      // return formatted min/max data as an object
+      return {
+          xMin: xMin,
+          xMax: xMax,
+          yMin: yMin,
+          yMax: yMax
+      }
+    }
+    let reds = points.selectAll( "path" )
+          .data(points_json.features)
+          .enter()
+          .append("path")
+          .attr("fill","red")
+          .attr('border', 'none')
+          .attr("d", geoPath);
+    let path = svg.append("path")
+          .datum(points_json.features)
+          .attr("fill", "none")
+          .attr("stroke", "red")
+          .attr("stroke-width", 1.5)
+          .attr("d", d3.line()
+              .x(function(d) {return albersProjection(d.geometry.coordinates)[0];})
+              .y(function(d) {return albersProjection(d.geometry.coordinates)[1];}));
+
+    let totalLength = path.node().getTotalLength();
+
+    path.attr("stroke-dasharray", totalLength + " " + totalLength)
+        .attr("stroke-dashoffset", totalLength)
+        .transition()
+        .duration(5000)
+        .attr("stroke-dashoffset", 2)
+        .ease(d3.easeLinear)
+
+    </script>
+  </body>
+</html>
